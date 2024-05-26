@@ -1,0 +1,72 @@
+
+
+[
+        {
+            "EntityType": "Hub",
+            "Name": "CostCenter",
+            "BusinessKeys": [
+                {
+                    "Name": "CostCenter",
+                    "DataType": "varchar(10)"
+                }
+                ,
+                {
+                    "Name": "ControllingArea",
+                    "DataType": "varchar(4)"
+                }
+            ]
+        }
+        ,
+        {
+            "EntityType": "Hub",
+            "Name": "ProfitCenter",
+            "BusinessKeys": [
+                {
+                    "Name": "ProfitCenter",
+                    "DataType": "varchar(10)"
+                }
+                ,
+                {
+                    "Name": "ControllingArea",
+                    "DataType": "varchar(4)"
+                }
+            ]
+        }
+        ,
+        {
+            "EntityType": "Link",
+            "Name": "AccountingDocument",
+            "Hubs": [
+                {
+                    "HubName": "CostCenter"
+                }
+                ,
+                {
+                    "HubName": "ProfitCenter"
+                }
+            ]
+        }
+        ,
+        {
+            "EntityType": "Satellite",
+            "Name": "SAPCOTEXTATTRIBUTCostCenter",
+            "ParentEntityType": "Hub",
+            "ParentEntityName": "CostCenter",
+            "BusinessColumns": [
+                {
+                    "Name": "LockIndicatorForActualPrimaryPostings",
+                    "DataType": "varchar(1)"
+                }
+                ,
+                {
+                    "Name": "LockIndicatorForPlanPrimaryCosts",
+                    "DataType": "varchar(1)"
+                }
+                ,
+                {
+                    "Name": "CompanyCode",
+                    "DataType": "varchar(4)"
+                }
+            ]
+        }
+    ]
