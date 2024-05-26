@@ -8,7 +8,7 @@ def generate_sql(entity):
         case "Link":
             return generate_sql_link(entity)
         case "Satellite":
-            return ""
+            return generate_sql_satellite(entity)
         case _: 
             raise UnknownEntityException(f"Unknown entity of type '{entity['EntityType']}' encountered.")
 
@@ -69,5 +69,48 @@ def generate_sql_link(entity):
         CONSTRAINT DFLT_{entity_prefix}{entity['Name']}_LoadDate DEFAULT ('9999-12-31') FOR LoadDate;
 
     {fks}
+    """
+    return sql
+
+def generate_sql_satellite(entity):
+    entity_prefix = "HSat" if entity['ParentEntityType'] == "Hub" else "LSat"
+    parent_w_datatype = f"{entity['ParentEntityName']}HKey              BINARY(16)          NOT NULL"
+    parent_prefix = "Hub" if entity['ParentEntityType'] == "Hub" else "Lnk"
+    fk = f"""
+        ALTER TABLE RAW.{entity_prefix}{entity['MiddleName']}{entity['Name']}
+            ADD CONSTRAINT FK_{entity_prefix}{entity['MiddleName']}{entity['Name']}_{parent_prefix}{entity['ParentEntityName']} FOREIGN KEY ({entity['ParentEntityName']}HKey)
+                REFERENCES RAW.{parent_prefix}{entity['ParentEntityName']} ({entity['ParentEntityName']}HKey);
+        """
+    
+    bus_cols = "\n".join([
+        f"""
+            , {bus_col['Name']}             {bus_col['DataType'].upper()}              NULL
+        """
+        for bus_col in entity['BusinessColumns']
+    ])
+
+    sql = f"""
+    IF OBJECT_ID(N'RAW.{entity_prefix}{entity['MiddleName']}{entity['Name']}', N'U') IS NOT NULL  
+        DROP TABLE RAW.{entity_prefix}{entity['MiddleName']}{entity['Name']}; 
+    
+    CREATE TABLE RAW.{entity_prefix}{entity['MiddleName']}{entity['Name']}
+    (
+          {parent_w_datatype}
+        , LoadDate                  DATETIME    NOT NULL
+        , LoadEndDate               DATETIME    NOT NULL
+        , AuditId                   BIGINT      NOT NULL
+        , ExtractionDate            DATETIME    NOT NULL
+        , {entity['Name']}HDiff         BINARY(16)  NOT NULL
+        , SourceSystem              VARCHAR(30) NOT NULL
+        {bus_cols}
+        , CONSTRAINT PK_{entity_prefix}{entity['MiddleName']}{entity['Name']} PRIMARY KEY NONCLUSTERED ({entity['Name']}HKey ASC, LoadDate ASC) ON FG_RawDataVault_Index
+    )
+    ON FG_RawDataVault_Data;
+
+    ALTER TABLE RAW.{entity_prefix}{entity['MiddleName']}{entity['Name']}
+    ADD
+        CONSTRAINT DFLT_{entity_prefix}{entity['MiddleName']}{entity['Name']}_LoadEndDate DEFAULT ('9999-12-31') FOR LoadEndDate;
+
+    {fk}
     """
     return sql

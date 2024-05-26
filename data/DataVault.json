@@ -49,7 +49,8 @@
         ,
         {
             "EntityType": "Satellite",
-            "Name": "SAPCOTEXTATTRIBUTCostCenter",
+            "MiddleName": "SAPCOTEXTATTRIBUT",
+            "Name": "CostCenter",
             "ParentEntityType": "Hub",
             "ParentEntityName": "CostCenter",
             "BusinessColumns": [
@@ -66,6 +67,25 @@
                 {
                     "Name": "CompanyCode",
                     "DataType": "varchar(4)"
+                }
+            ]
+        }
+        ,
+        {
+            "EntityType": "Satellite",
+            "MiddleName": "SAPFI",
+            "Name": "AccountingDocument",
+            "ParentEntityType": "Link",
+            "ParentEntityName": "AccountingDocument",
+            "BusinessColumns": [
+                {
+                    "Name": "AmountInTransactionCurrency",
+                    "DataType": "numeric(38,13)"
+                }
+                ,
+                {
+                    "Name": "AmountInGlobalCurrency",
+                    "DataType": "numeric(38,13)"
                 }
             ]
         }
