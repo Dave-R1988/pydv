@@ -1,7 +1,9 @@
 from exceptions import UnknownEntityException
 
+def entity_order():
+    return ["Hub", "Link", "Satellite"]
+
 def generate_sql(entity):
-    sql = []
     match(entity['EntityType']):
         case "Hub":
             return generate_sql_hub(entity)
@@ -17,9 +19,6 @@ def generate_sql_hub(entity):
     bks_w_datatype = "\n, ".join([ f"{bk['Name']}BK                {bk['DataType'].upper()}        NOT NULL" for bk in entity['BusinessKeys'] ])
 
     sql = f"""
-    IF OBJECT_ID(N'RAW.{entity_prefix}{entity['Name']}', N'U') IS NOT NULL  
-        DROP TABLE RAW.{entity_prefix}{entity['Name']};  
-    
     CREATE TABLE RAW.{entity_prefix}{entity['Name']}
     (
           {entity['Name']}HKey          BINARY(16)      NOT NULL
@@ -50,9 +49,6 @@ def generate_sql_link(entity):
     ])
     
     sql = f"""
-    IF OBJECT_ID(N'RAW.{entity_prefix}{entity['Name']}', N'U') IS NOT NULL  
-        DROP TABLE RAW.{entity_prefix}{entity['Name']}; 
-    
     CREATE TABLE RAW.{entity_prefix}{entity['Name']}
     (
           {entity['Name']}HKey          BINARY(16)      NOT NULL
@@ -89,10 +85,7 @@ def generate_sql_satellite(entity):
         for bus_col in entity['BusinessColumns']
     ])
 
-    sql = f"""
-    IF OBJECT_ID(N'RAW.{entity_prefix}{entity['MiddleName']}{entity['Name']}', N'U') IS NOT NULL  
-        DROP TABLE RAW.{entity_prefix}{entity['MiddleName']}{entity['Name']}; 
-    
+    sql = f"""    
     CREATE TABLE RAW.{entity_prefix}{entity['MiddleName']}{entity['Name']}
     (
           {parent_w_datatype}
@@ -112,5 +105,23 @@ def generate_sql_satellite(entity):
         CONSTRAINT DFLT_{entity_prefix}{entity['MiddleName']}{entity['Name']}_LoadEndDate DEFAULT ('9999-12-31') FOR LoadEndDate;
 
     {fk}
+    """
+    return sql
+
+def generate_sql_drop_if_exists(entity):
+    match(entity['EntityType']):
+        case "Hub":
+            entity_prefix = "Hub"
+        case "Link":
+            entity_prefix = "Lnk"
+        case "Satellite":
+            entity_prefix = f"HSat{entity['MiddleName']}" if entity['ParentEntityType'] == "Hub" else f"LSat{entity['MiddleName']}"
+        case _: 
+            raise UnknownEntityException(f"Unknown entity of type '{entity['EntityType']}' encountered.")
+        
+    table_name = f"{entity_prefix}{entity['Name']}"
+    sql = f"""
+    IF OBJECT_ID(N'RAW.{table_name}') IS NOT NULL
+        DROP TABLE RAW.{table_name};
     """
     return sql

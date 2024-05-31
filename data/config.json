@@ -1,0 +1,9 @@
+{
+    "DBMS": "SQL Server",
+    "Server": "RAHELDESKTOP\\SQLEXPRESS",
+    "DB": "DataVault",
+    "Schema": "RAW",
+
+    "ModelName": "DataVault",
+    "DropIfExists": "True"
+}
